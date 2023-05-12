@@ -29,7 +29,9 @@
 
 #include "zpng.h"
 
-#include "zstd/zstd.h"
+#define ZSTD_DLL_IMPORT 1
+#include <zstd.h>
+#include <gongen/core/platform.hpp>
 
 #include <stdlib.h> // calloc
 
@@ -383,21 +385,21 @@ ZPNG_Buffer ZPNG_Compress(
     }
 
     // Space for packing
-    packing = (uint8_t*)calloc(1, byteCount);
+    packing = (uint8_t*)_gen::alloc(byteCount);
 
     if (!packing) {
 ReturnResult:
         if (bufferOutput.Data != output) {
-            free(output);
+            _gen::free(output);
         }
-        free(packing);
+        _gen::free(packing);
         return bufferOutput;
     }
 
     const unsigned maxOutputBytes = (unsigned)ZSTD_compressBound(byteCount);
 
     // Space for output
-    output = (uint8_t*)calloc(1, ZPNG_HEADER_OVERHEAD_BYTES + maxOutputBytes);
+    output = (uint8_t*)_gen::alloc(1, ZPNG_HEADER_OVERHEAD_BYTES + maxOutputBytes);
 
     if (!output) {
         goto ReturnResult;
@@ -480,9 +482,9 @@ ZPNG_ImageData ZPNG_Decompress(
     if (!buffer.Data || buffer.Bytes < ZPNG_HEADER_OVERHEAD_BYTES) {
 ReturnResult:
         if (imageData.Buffer.Data != output) {
-            free(output);
+            _gen::free(output);
         }
-        free(packing);
+        _gen::free(packing);
         return imageData;
     }
 
@@ -502,7 +504,7 @@ ReturnResult:
     const unsigned byteCount = pixelBytes * pixelCount;
 
     // Space for packing
-    packing = (uint8_t*)calloc(1, byteCount);
+    packing = (uint8_t*)_gen::alloc(1, byteCount);
 
     if (!packing) {
         goto ReturnResult;
@@ -523,7 +525,7 @@ ReturnResult:
     // Stage 2: Unpack/Unfilter
 
     // Space for output
-    output = (uint8_t*)calloc(1, byteCount);
+    output = (uint8_t*)_gen::alloc(1, byteCount);
 
     if (!output) {
         goto ReturnResult;
@@ -569,7 +571,7 @@ void ZPNG_Free(
 {
     if (buffer && buffer->Data)
     {
-        free(buffer->Data);
+        _gen::free(buffer->Data);
         buffer->Data = nullptr;
         buffer->Bytes = 0;
     }
